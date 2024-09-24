@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "module-control"
+version = "0.1.0"
+description = "A Python package for network analysis including dominating sets and controllability."
+authors = ["Fan Tianyi <fantianyi@stu.njmu.edu.cn>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+numpy = "^1.21.0"
+pandas = "^1.3.0"
+networkx = "^2.6.0"
+scikit-learn = "^1.0"
+python-louvain = "^0.15"
+scipy = "^1.7.0"
+matplotlib = "^3.4.0"
+seaborn = "^0.12.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.0"
+
+[[tool.poetry.packages]]
+include = "module_control_pkg"
+from = "."
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
