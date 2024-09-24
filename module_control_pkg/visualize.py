@@ -9,37 +9,20 @@ import os
 from typing import Dict
 
 def plot_heatmap(matrix: np.ndarray, result_path: str, data_file: str) -> None:
-    """绘制优化后的偏相关矩阵热力图并保存"""
-    plt.figure(figsize=(20, 18))  # 增大图像尺寸
-    sns.set(font_scale=0.5)  # 调整字体大小
-
-    # 创建掩码，仅在绝对值大于某个阈值时显示注释
-    mask = np.abs(matrix) < 0.3  # 根据需要调整阈值
-    sns.heatmap(matrix, 
-                annot=~mask, 
-                fmt=".2f", 
-                annot_kws={"size": 6}, 
-                cmap='coolwarm', 
-                cbar=True, 
-                linewidths=0.5,
-                mask=mask,
-                square=True)
-
-    plt.title('Partial Correlation Matrix Heatmap', fontsize=16)
-    plt.xlabel('Variables', fontsize=14)
-    plt.ylabel('Variables', fontsize=14)
-
-    # 调整刻度标签
-    plt.xticks(ticks=np.arange(0, matrix.shape[1], 5) + 0.5, 
-               labels=np.arange(0, matrix.shape[1], 5), 
-               rotation=90, fontsize=8)
-    plt.yticks(ticks=np.arange(0, matrix.shape[0], 5) + 0.5, 
-               labels=np.arange(0, matrix.shape[0], 5), 
-               rotation=0, fontsize=8)
-
+    """绘制偏相关矩阵热力图并保存"""
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(matrix, annot=True, cmap='coolwarm', fmt=".2f", annot_kws={"size": 5})
+    
+    plt.xticks(ticks=np.arange(0, matrix.shape[1], 5), labels=np.arange(0, matrix.shape[1], 5))
+    plt.yticks(ticks=np.arange(0, matrix.shape[0], 5), labels=np.arange(0, matrix.shape[0], 5))
+    
+    plt.title('Partial Correlation Matrix Heatmap')
+    plt.xlabel('Variables')
+    plt.ylabel('Variables')
+    
     # 保存热力图
     heatmap_file = os.path.join(result_path, f"heatmap_{data_file}.png")
-    plt.savefig(heatmap_file, dpi=300, bbox_inches='tight')
+    plt.savefig(heatmap_file, dpi=300)
     plt.close()
     print(f"Heatmap saved to {heatmap_file}")
 
