@@ -63,11 +63,14 @@ import community  # python-louvain
 
 def main():
     # 文件路径，要计算的数据的文件夹
-    data_path = "D:/module-control/"
+    # 示例：data_path = "D:/module-control/"
+    data_path = "********************* insert you data path *********************"`
     # 文件路径，文件要保存到的文件夹
-    result_path = "D:/module-control/results/"
+    # 示例：result_path = "D:/module-control/results/"
+    result_path = "********************* insert you result path *********************"
     # 要计算的网络名字
-    data_file = "test"
+    # 示例：data_file = "test"
+    data_file = "********************* insert you network name to calculate *********************"
 
     # 确保结果目录存在
     ensure_directory_exists(result_path)
@@ -186,10 +189,15 @@ from sklearn.covariance import GraphicalLasso
 from module_control_pkg import ensure_directory_exists
 
 # 设置路径
-data_path = "D:/module-control/"
-data_file = "test"
-result_path = "D:/module-control/results/"
-
+# 文件路径，要计算的数据的文件夹
+# 示例：data_path = "D:/module-control/"
+data_path = "********************* insert you data path *********************"`
+# 文件路径，文件要保存到的文件夹
+# 示例：result_path = "D:/module-control/results/"
+result_path = "********************* insert you result path *********************"
+# 要计算的网络名字
+# 示例：data_file = "test"
+data_file = "********************* insert you network name to calculate *********************"
 # 确保结果目录存在
 ensure_directory_exists(result_path)
 
