@@ -18,14 +18,14 @@ README.md
 
 使用 `pip` 安装 `module-control`：
 
-bash
+```bash
 pip install module-control
-
+```
 或者使用 `Poetry` 安装：
 
-bash
+```bash
 poetry add module-control
-
+```
 ## 使用示例
 
 以下是一个使用 `module-control` 包的完整示例，展示如何进行网络分析和可视化。

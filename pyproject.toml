@@ -5,6 +5,9 @@ description = "A Python package for network analysis including dominating sets a
 authors = ["Fan Tianyi <fantianyi@stu.njmu.edu.cn>"]
 license = "MIT"
 readme = "README.md"
+homepage = "https://github.com/realfty/module-control"
+repository = "https://github.com/realfty/module-control"
+documentation = "https://github.com/realfty/module-control"
 
 [tool.poetry.dependencies]
 python = "^3.8"
