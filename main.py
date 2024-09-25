@@ -1,7 +1,12 @@
 # main.py
 
+import os
 import pandas as pd
+import numpy as np
 import networkx as nx
+from sklearn.covariance import GraphicalLasso
+import community  # python-louvain
+
 from module_control_pkg import (
     matrix_preprocess,
     all_min_dominating_set,
@@ -9,6 +14,7 @@ from module_control_pkg import (
     module_controllability,
     plot_network,
     plot_heatmap,
+    plot_module,
     save_network_metrics,
     save_edges,
     save_controllability,
@@ -29,6 +35,9 @@ def main():
     result_path = "D:/module-control/results/"
     ## 要计算的网络名字
     data_file = "test"
+
+    # 确保结果目录存在
+    ensure_directory_exists(result_path)
 
     # 读取csv,生成pd
     pd_data = pd.read_csv(data_path+data_file+".csv")
@@ -59,7 +68,7 @@ def main():
     print("矩阵预处理完成。")
 
     # 生成网络
-    nxG = nx.Graph(matrix,weight=True)
+    nxG = nx.Graph(matrix, weight=True)
     print("网络图生成完成。")
 
     # 网络分析
@@ -82,7 +91,7 @@ def main():
     print(f"贪心算法找到的最小支配集: {all_dom_set}")
 
     # ACF
-    as_dom_node_count = dominating_frequency(all_dom_set,nxG)
+    as_dom_node_count = dominating_frequency(all_dom_set, nxG)
     print("frequency as dom nodes: "+str(as_dom_node_count))
 
     # 可控性分析
@@ -116,8 +125,9 @@ def main():
 
     # 可视化
     plot_network(nxG, louvain_communities, result_path, "network_graph")
-    plot_heatmap(matrix, result_path, "partial_corr_matrix")
-    print(f"网络图和热力图已保存至 {result_path} 目录。")
+    plot_heatmap(partial_corr_matrix, result_path, "partial_corr_matrix")
+    plot_module(controllability, louvain_communities, result_path, data_file)
+    print(f"网络图、热力图和模块控制图已保存至 {result_path} 目录。")
 
 if __name__ == "__main__":
     main()

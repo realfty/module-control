@@ -6,13 +6,13 @@ README.md
 
 ## 特色
 
-- **网络建模**：基于部分相关矩阵构建网络图。
-- **网络分析**：计算网络的度量指标，如中心性、聚类系数等。
-- **社区检测**：使用 Louvain 算法进行社区划分。
-- **支配集计算**：支持精确算法和贪心算法计算最小支配集。
-- **可控性分析**：分析模块间的控制强度。
-- **可视化**：生成部分相关矩阵热力图和带社区划分的网络图。
-- **结果保存**：将分析结果保存为 CSV 和 TXT 文件，便于后续使用。
+- 网络建模：基于部分相关矩阵构建网络图。
+- 网络分析：计算网络的度量指标，如中心性、聚类系数等。
+- 社区检测：使用 Louvain 算法进行社区划分。
+- 支配集计算：支持精确算法和贪心算法计算最小支配集。
+- 可控性分析：分析模块间的控制强度。
+- 可视化：生成部分相关矩阵热力图、带社区划分的网络图和模块控制图。
+- 结果保存：将分析结果保存为 CSV 和 TXT 文件，便于后续使用。
 
 ## 安装
 
@@ -41,13 +41,21 @@ poetry add module-control
 ```
 # main.py
 
+import os
 import pandas as pd
+import numpy as np
 import networkx as nx
+from sklearn.covariance import GraphicalLasso
+import community  # python-louvain
+
 from module_control_pkg import (
+    matrix_preprocess,
+    all_min_dominating_set,
     network_analysis,
     module_controllability,
     plot_network,
     plot_heatmap,
+    plot_module,
     save_network_metrics,
     save_edges,
     save_controllability,
@@ -56,50 +64,66 @@ from module_control_pkg import (
     greedy_minimum_dominating_set,
     dominating_frequency
 )
-import os
-from sklearn.covariance import GraphicalLasso
-import numpy as np
-import community  # python-louvain
 
 def main():
-    # 文件路径，要计算的数据的文件夹
-    # 示例：data_path = "D:/module-control/"
-    data_path = "********************* insert you data path *********************"`
-    # 文件路径，文件要保存到的文件夹
-    # 示例：result_path = "D:/module-control/results/"
-    result_path = "********************* insert you result path *********************"
-    # 要计算的网络名字
-    # 示例：data_file = "test"
-    data_file = "********************* insert you network name to calculate *********************"
+    ## 文件路径，要计算的数据的文件夹
+    data_path = "D:/module-control/"
+    ## 文件路径，文件要保存到的文件夹
+    result_path = "D:/module-control/results/"
+    ## 要计算的网络名字
+    data_file = "test"
 
     # 确保结果目录存在
     ensure_directory_exists(result_path)
 
-    # 读取 CSV 数据
-    pd_data = pd.read_csv(os.path.join(data_path, f"{data_file}.csv"))
+    # 读取csv,生成pd
+    pd_data = pd.read_csv(data_path + data_file + ".csv")
     print("数据读取完成。")
 
-    # 计算部分相关矩阵
+    # 计算网络模型，返回矩阵
+    ################ 可选参数1 ###################
+    ## GraphicalLassoCV()使用交叉验证自动确定alpha
+    # estimator = GraphicalLassoCV()
+    ## GraphicalLasso()需要给定参数alpha，默认alpha=0.01，alpha越大网络越稀疏
     estimator = GraphicalLasso(alpha=0.05)
     estimator.fit(pd_data)
-    partial_corr_matrix = -estimator.precision_ / np.outer(np.sqrt(np.diag(estimator.precision_)), np.sqrt(np.diag(estimator.precision_)))
+    print(estimator.precision_)
+    print(estimator.precision_.shape)
+    #### 精准矩阵要进行处理，从逆协方差变成偏相关
+    # 将精度矩阵对角线元素开根号
+    diag_sqrt = np.sqrt(np.diag(estimator.precision_))
+    # 计算偏相关矩阵
+    partial_corr_matrix = -estimator.precision_ / np.outer(diag_sqrt, diag_sqrt)
+    # 将对角线元素设置为1
     np.fill_diagonal(partial_corr_matrix, 1)
+    print(partial_corr_matrix)
     print("部分相关矩阵计算完成。")
-
+    
+    # 预处理矩阵
+    matrix = matrix_preprocess(partial_corr_matrix)
+    print("矩阵预处理完成。")
+    
     # 生成网络
-    nxG = nx.from_numpy_array(partial_corr_matrix)
+    nxG = nx.Graph(matrix, weight=True)
     print("网络图生成完成。")
-
+    
     # 网络分析
     metrics = network_analysis(nxG)
-    print("网络分析完成。")
-
+    print("网络分析完成：")
+    for key, value in metrics.items():
+        print(f"{key}: {value}")
+    
     # 社区划分
     louvain_communities = community.best_partition(nxG)
     print("社区划分完成。")
-
-    # 计算最小支配集（使用贪心算法）
+    
+    # 最小支配集
+    # all_dom_set, strengths = all_min_dominating_set(nxG)
+    # algorithm = "precise"
+    # print(f"找到 {len(all_dom_set)} 个最小支配集。")
+    # 贪心算法
     all_dom_set = greedy_minimum_dominating_set(nxG, times=1000)
+    algorithm = "greedy"
     print(f"贪心算法找到的最小支配集: {all_dom_set}")
 
     # 计算支配集频率
@@ -112,6 +136,9 @@ def main():
 
     # 保存结果
     # 1. 保存网络度量指标
+    # 需要将 'module' 和 'CF' 添加到度量结果中
+    metrics["module"] = {node: louvain_communities[node] for node in metrics["degree"].keys()}
+    metrics["CF"] = as_dom_node_count
     save_network_metrics(metrics, louvain_communities, as_dom_node_count, result_path, data_file)
     print("网络度量指标已保存。")
 
@@ -130,13 +157,43 @@ def main():
     # 可视化
     plot_network(nxG, louvain_communities, result_path, "network_graph")
     plot_heatmap(partial_corr_matrix, result_path, "partial_corr_matrix")
-    print(f"网络图和热力图已保存至 {result_path} 目录。")
+    plot_module(controllability, louvain_communities, result_path, data_file)
+    print(f"网络图、热力图和模块控制图已保存至 {result_path} 目录。")
 
 if __name__ == "__main__":
     main()
 ```
 
-### 3. 运行 `main.py`
+### 3. 绘制模块控制图
+
+使用 plot_module 函数绘制模块间的平均控制强度图。
+
+```bash
+from module_control_pkg import plot_module
+
+# 控制强度字典示例
+controllability = {
+    "0_1": 0.5,
+    "0_2": 0.6,
+    "1_2": 0.7,
+    "1_3": 0.8,
+    "2_3": 0.4,
+    "3_0": 0.3
+}
+
+# 社区划分字典示例
+louvain_communities = {
+    0: 0,
+    1: 0,
+    2: 1,
+    3: 1
+}
+
+# 绘制模块控制图
+plot_module(controllability, louvain_communities, "results", "test")
+```
+
+### 4. 运行 `main.py`
 
 在命令行中导航到包含 `main.py` 的目录，然后运行：
 
@@ -178,7 +235,7 @@ python main.py
 
 ## 示例代码
 
-以下是一些常用功能的示例代码，帮助你快速上手：
+以下是一些常用功能的示例代码，帮助你快速上手，更多代码请参考main.py：
 
 ### 1. 读取数据并计算部分相关矩阵
 
